@@ -4,11 +4,29 @@ const app = new Koa();
 const Top250Model = require("./models/top250");
 const cors = require("koa2-cors");
 const bodyParser = require("koa-bodyparser");
+const koaBody = require('koa-body')
+app.use(koaBody({
+
+    multipart: true,
+    formidable: {
+        maxFileSize: 200*1024*1024,
+    keepExtensions: true
+    }
+}));
 router.get("/top250", async ctx=>{
-    var data = await Top250Model.find();
+    var {start, limit} = ctx.query;
+    if (start == undefined){
+        start = 0
+    }
+    if(limit == undefined){
+        limit = 5
+    }
+    var data = await Top250Model.find().skip(Number(start)).limit(Number(limit));
+    var total = await Top250Model.find().count();
     ctx.body = {
         code:100,
         res:data,
+        total,
         msg:"GET /top20  success"
     }
 })
@@ -46,6 +64,7 @@ router.post("/collect/cancel", async ctx=>{
         }
     }
 })
+/* delete data */
 router.post("/delete", async ctx=>{
     var id = ctx.request.body.id;
     var res = await Top250Model.deleteOne({_id:id});
@@ -56,6 +75,12 @@ router.post("/delete", async ctx=>{
             msg:"delete success"
         }
     }
+})
+router.post("/doAdd",async ctx=>{
+    console.log(ctx.request.body);
+    /* 那么这里可以取得文字相关的信息 */
+    var {title,slogo,evaluate,rating,labels,collected} = ctx.request.body;
+    
 })
 app.use(bodyParser()); 
 app.use(cors());

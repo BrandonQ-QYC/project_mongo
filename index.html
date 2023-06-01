@@ -16,16 +16,16 @@
 </head>
 <body>
     <div id="app">
-        <h2>豆瓣Top250</h2>
+        <h2>Douban-Top250</h2>
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
-                    <th>编号</th>
-                    <th>名字</th>
-                    <th>海报</th>
-                    <th>评分</th>
-                    <th>是否收藏</th>
-                    <th>操作</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Post</th>
+                    <th>Rate</th>
+                    <th>Collect</th>
+                    <th>Method</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,24 +40,40 @@
                         :src="item.collected?'images/collect.png':'images/cancel.png'" alt="">
                     </td>
                     <td>
-                    <button type="button" class="btn btn-danger">删除</button>
+                        <button @click="handleDelete(item._id)"  type="button" class="btn btn-danger">Delete</button>
                     </td>
                 </tr>
             </tbody>
         </table>
-        
+        <nav aria-label="Page navigation" class="text-center">
+            <ul class="pagination pagination-lg">
+              <li>
+                <a href="javascript:void(0)" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              <li  v-for="item of pages"><a @click="doPage(item)" href="javascript:void(0)">{{item}}</a></li>
+              <li>
+                <a href="javascript:void(0)" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            </ul>
+        </nav>
     </div>
     <script>
         new Vue({
             el:"#app",
             data:{
-                movies:[]
+                movies:[],
+                total:""
             },
             mounted() {
                 $.ajax({
                     url:"http://localhost:8080/top250",
                     success:res=>{
                         this.movies = res.res
+                        this.total = res.total;
                     }
                 })
             },
@@ -76,8 +92,44 @@
                        
                    }
                    this.movies = movies;
-               }
+                },
+                async handleDelete(id){
+                     var movies = this.movies.filter(item=>{
+                       return  item._id != id;
+                     })
+                     await $.ajax({url:"http://localhost:8080/delete",data:{id},type:"post"});
+                     this.movies = movies;
+               },
+               async doPage(num){
+                   var start = (num-1)*5;
+                   $.ajax({
+                    url:`http://localhost:8080/top250?start=${start}`,
+                    success:res=>{
+                        this.movies = res.res
+                        this.total = res.total;
+                    }
+                })
+                }
             },
+            computed:{
+                /*
+                23
+                
+                [0,5,10,15,20]
+                [1,2,3,4,5] 
+                 */
+                pages:function(){
+                    var total = this.total;
+                    var arr = [];
+                    for(var i=0;i<total;i+=5){
+                        arr.push(i);
+                    }
+                    var res = arr.map(item=>{
+                        return (item+5)/5
+                    })
+                    return res;
+                }
+            }
         })
     </script>
 </body>
