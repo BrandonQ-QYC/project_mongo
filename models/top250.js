@@ -1,5 +1,5 @@
 const mongoose = require("./db");
-const T250Schema = new mongoose.Schema({
+const Top250Schema = new mongoose.Schema({
     pic: String,
     title: String,
     slogo: String,
