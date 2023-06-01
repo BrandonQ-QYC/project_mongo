@@ -56,7 +56,6 @@ router.post("/delete", async ctx=>{
             msg:"delete success"
         }
     }
-
 })
 app.use(bodyParser()); 
 app.use(cors());
