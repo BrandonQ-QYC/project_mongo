@@ -46,7 +46,18 @@ router.post("/collect/cancel", async ctx=>{
         }
     }
 })
+router.post("/delete", async ctx=>{
+    var id = ctx.request.body.id;
+    var res = await Top250Model.deleteOne({_id:id});
+    console.log(res)
+    if(res.deletedCount){
+        ctx.body = {
+            code:200,
+            msg:"delete success"
+        }
+    }
 
+})
 app.use(bodyParser()); 
 app.use(cors());
 app.use(router.routes());
