@@ -4,9 +4,12 @@ const app = new Koa();
 const Top250Model = require("./models/top250");
 const cors = require("koa2-cors");
 const bodyParser = require("koa-bodyparser");
-const koaBody = require('koa-body')
-app.use(koaBody({
-
+const koabody = require('koa-body')
+const static = require('koa-static');
+const fs = require("fs");
+const path = require("path");
+app.use(static(`${process.cwd()}/static`));
+app.use(koabody({
     multipart: true,
     formidable: {
         maxFileSize: 200*1024*1024,
@@ -77,10 +80,37 @@ router.post("/delete", async ctx=>{
     }
 })
 router.post("/doAdd",async ctx=>{
-    console.log(ctx.request.body);
-    /* 那么这里可以取得文字相关的信息 */
     var {title,slogo,evaluate,rating,labels,collected} = ctx.request.body;
-    
+    const file = ctx.request.files.file
+    const basename = path.basename(file.path)
+    const reader = fs.createReadStream(file.path);
+    let filePath = process.cwd() + `/static/${basename}`;
+    const upStream = fs.createWriteStream(filePath);
+    reader.pipe(upStream);
+    var  pic = `${ctx.origin}/${basename}`
+    var data = new Top250Model({
+        title,
+        pic,
+        slogo,
+        evaluate,
+        rating,
+        labels,
+        collected:Boolean(collected)
+    })
+    data.save(err => {
+        if (err) {
+            throw err
+        };
+    })
+})
+router.get("/detail",async ctx=>{
+     var id = ctx.request.query.id.trim();
+     var data = await Top250Model.find({_id:id});
+     ctx.body = {
+         code:200,
+         res:data[0],
+         msg:"success  detail"
+     }
 })
 app.use(bodyParser()); 
 app.use(cors());
